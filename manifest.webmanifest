@@ -1,0 +1,24 @@
+{
+  "name": "恋人絮语展馆",
+  "short_name": "恋人絮语",
+  "description": "罗兰·巴特《恋人絮语》的九个展厅：画像、导读与边注。",
+  "lang": "zh-CN",
+  "id": "./",
+  "start_url": "./#lobby",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#cdc8bf",
+  "theme_color": "#cdc8bf",
+  "categories": ["books", "education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "藏品总目", "url": "./#index" },
+    { "name": "第 II 厅 · 暗房", "url": "./#hall-2" },
+    { "name": "第 VII 厅 · 深渊", "url": "./#hall-7" }
+  ]
+}

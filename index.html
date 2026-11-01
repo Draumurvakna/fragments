@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>恋人絮语展馆</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="罗兰·巴特《恋人絮语》的九个展厅：画像、导读与边注。">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#cdc8bf">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="恋人絮语">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400&family=Long+Cang&family=Zhi+Mang+Xing&family=Reenie+Beanie&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="grain" aria-hidden="true"></canvas>
+<div id="cursor" aria-hidden="true"><div class="ring"></div><div class="dot"></div><div class="label"></div></div>
+<div id="doors" aria-hidden="true"><div class="leaf l"><b></b></div><div class="leaf r"><span></span></div></div>
+
+<header id="top">
+  <a class="brand" href="#lobby">恋人絮语</a>
+  <nav aria-label="主导航">
+    <a href="#lobby" data-nav="lobby">门厅</a>
+    <a href="#hall-1" data-nav="hall">展厅</a>
+    <a href="#index" data-nav="index">藏品总目</a>
+    <button type="button" id="installBtn" hidden>安装 App</button>
+    <a id="bloglink" href="https://draumurvakna.github.io/">回到博客 ↗</a>
+  </nav>
+</header>
+
+<aside id="minimap" aria-label="展馆平面图"></aside>
+<main id="app"></main>
+<section id="closeup" aria-hidden="true" aria-label="近看"></section>
+<div id="installTip" role="status" hidden>在 Safari 里点底部的“分享”，再选“添加到主屏幕”，展馆就会出现在桌面上。<button type="button" id="installTipClose">知道了</button></div>
+
+<script src="js/data.js"></script>
+<script src="js/guides.js"></script>
+<script src="js/painter.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
