@@ -28,7 +28,15 @@
 - `js/app.js` 交互：路由、门厅、各展厅、近看、总目、小地图、转场、安装按钮
 - `manifest.webmanifest`、`sw.js`、`icons/` 让网站可以安装成 App 并离线打开
 
-纯静态，没有构建步骤，不依赖任何框架。字体走 Google Fonts，参照名画直接引用 Wikimedia Commons 原图，加载不到时自动换成代码画。
+纯静态，没有构建步骤，不依赖任何框架。参照名画直接引用 Wikimedia Commons 原图，加载不到时自动换成代码画。
+
+- `css/fonts.css`、`fonts/` 字体随网站一起托管，不依赖 Google Fonts，国内也能正常显示，离线也能用：
+  - 霞鹜文楷 GB 屏幕版（正文、画像、导读）
+  - 站酷小薇（标题）
+  - IM Fell French Canon（法文）
+  - Courier Prime（编号）
+  - 龙藏体、志莽行书、Reenie Beanie（第 IV 厅涂写）
+  字体按网站用到的字裁剪过，另带约 3700 个常用字的备用文件。以后改文字用到了生僻字，那个字会用系统字体显示，不影响阅读。
 
 ## 发布到 GitHub Pages
 

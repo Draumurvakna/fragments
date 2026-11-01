@@ -1,9 +1,10 @@
 /* 恋人絮语展馆 · 离线缓存
  * 改了页面内容后，把 VERSION 改一下，已安装的 App 下次打开就会换成新版本。
  */
-const VERSION = 'fragments-v1';
+const VERSION = 'fragments-v4';
 const SHELL = `${VERSION}-shell`, FONTS = 'fragments-fonts', ART = 'fragments-art';
 const FILES = ['./', './index.html', './css/style.css', './js/data.js', './js/guides.js', './js/painter.js', './js/app.js',
+  './css/fonts.css', './fonts/wenkai-core.woff2', './fonts/xiaowei-core.woff2', './fonts/fell-italic.woff2', './fonts/fell-roman.woff2', './fonts/courier.woff2',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './icons/icon-32.png'];
 
 self.addEventListener('install', e => {
@@ -19,6 +20,11 @@ async function staleWhileRevalidate(req, name) {
   const hit = await cache.match(req);
   const net = fetch(req).then(res => { if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone()); return res; }).catch(() => hit);
   return hit || net;
+}
+async function networkFirst(req, name) {
+  const cache = await caches.open(name);
+  try { const res = await fetch(req, { cache: 'no-cache' }); if (res && res.ok) cache.put(req, res.clone()); return res; }
+  catch (err) { return (await cache.match(req)) || Response.error(); }
 }
 async function cacheFirst(req, name) {
   const cache = await caches.open(name);
@@ -37,7 +43,7 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  if (url.origin === location.origin) { e.respondWith(staleWhileRevalidate(req, SHELL)); return; }
+  if (url.origin === location.origin) { e.respondWith(networkFirst(req, SHELL)); return; }
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') { e.respondWith(staleWhileRevalidate(req, FONTS)); return; }
   if (url.hostname.endsWith('wikimedia.org')) { e.respondWith(cacheFirst(req, ART)); return; }
 });

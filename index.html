@@ -14,9 +14,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="恋人絮语">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400&family=Long+Cang&family=Zhi+Mang+Xing&family=Reenie+Beanie&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;600&display=swap">
+<link rel="preload" href="fonts/wenkai-core.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/xiaowei-core.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -33,7 +33,9 @@
     <button type="button" id="installBtn" hidden>安装 App</button>
     <a id="bloglink" href="https://draumurvakna.github.io/">回到博客 ↗</a>
   </nav>
+  <button type="button" id="menuBtn" aria-expanded="false" aria-controls="menu">目录</button>
 </header>
+<nav id="menu" aria-label="展馆目录" hidden></nav>
 
 <aside id="minimap" aria-label="展馆平面图"></aside>
 <main id="app"></main>

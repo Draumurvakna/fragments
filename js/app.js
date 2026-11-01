@@ -23,7 +23,6 @@
       x.putImageData(img, 0, 0);
     }
     draw();
-    if (!reduced) setInterval(draw, 110);
   })();
 
   /* ---------- 光标 ---------- */
@@ -96,7 +95,7 @@
     $('.leaf.l b', doors).textContent = label;
     $('.leaf.r span', doors).textContent = sub;
     doors.classList.add('shut');
-    return new Promise(r => setTimeout(r, reduced ? 0 : 560));
+    return new Promise(r => setTimeout(r, reduced ? 0 : 440));
   }
   function open() { setTimeout(() => doors.classList.remove('shut'), 120); }
 
@@ -129,12 +128,14 @@
   /* ---------- 视图：门厅 ---------- */
   function viewLobby() {
     setMini(0);
-    const S = 1150, Z0 = -1650, N = M.halls.length;
+    const S = 1100, Z0 = -1000, N = M.halls.length;
+    const XS = innerWidth < 760 ? .7 : 1;
     const ZEND = Z0 - (N - 1) * S - 1500;
     app.innerHTML = `
       <section class="corridor" id="corr"><div class="stage" id="stage"><div class="world" id="world"></div>
         <div class="hud"><span id="hud-depth">距入口 0.0 米</span><span class="hint" id="hud-hint">向下滚动，往里走</span><span id="hud-next"></span></div>
       </div></section>
+      <section class="preface"><div class="pre-inner"><span class="mono">PRÉFACE · 前言</span><h2>写在入口</h2>${M.preface.map(t => `<p>${esc(t)}</p>`).join('')}</div></section>
       <section class="plan"><div class="plan-inner">
         <div><span class="mono" style="color:var(--ink-3)">PLAN · 平面图</span><h2>九个展厅，一条动线</h2>
           <p>从入口进来，按 I 到 IX 的顺序走一遍，大致是一段恋情从开始到出口的样子。但巴特本人反对把这些片段排成故事，所以你也可以随便推开哪扇门。</p>
@@ -165,17 +166,14 @@
     // 入口
     const ent = add(`<div class="entrance"><div class="half l"><div class="title">恋人</div><div class="meta">ROLAND BARTHES<br>1977</div></div><div class="half r"><div class="title">絮语</div><div class="meta fr" style="font-size:20px;letter-spacing:.05em">Fragments d’un discours amoureux</div></div></div>`,
       { x: 0, y: -40, z: 0, ax: '-50%', ay: '-50%', entrance: 1 });
-    // 前言
-    M.preface.forEach((t, i) => add(`<div class="wallnote"><span class="mono">前言 · ${i + 1} / ${M.preface.length}</span>${esc(t)}</div>`,
-      { x: i % 2 ? 380 : -380, y: -60, z: -420 - i * 380, ry: i % 2 ? -24 : 24, ax: '-50%', ay: '-50%', near: 300 }));
     // 九个画架
     M.halls.forEach((h, i) => {
       const d = add(`<a class="easel3d" href="#hall-${h.id}" data-cur="进入第 ${h.roman} 厅"><div class="panel"><canvas></canvas>
         <div class="num"><span>SALA ${h.roman}</span><span>${h.figures.length} 幅</span></div><div class="nm">${esc(h.name)}</div>
         <div class="sp">${h.kind === 'standard' ? h.en : '特展厅 · ' + h.en}</div></div><div class="leg"></div><div class="foot"></div></a>`,
-        { x: i % 2 ? 360 : -360, y: 360, z: Z0 - i * S, ry: i % 2 ? -26 : 26, ax: '-50%', ay: '-100%', hall: h });
+        { x: (i % 2 ? 360 : -360) * XS, y: 360, z: Z0 - i * S, ry: i % 2 ? -26 : 26, ax: '-50%', ay: '-100%', hall: h });
       // 背后的灰泥墙
-      add('', { cls: 'slab', w: 300, h: 620, x: (i % 2 ? 640 : -640), y: -300, z: Z0 - i * S - 220, ry: i % 2 ? -8 : 8, ax: '-50%', ay: '0', bg: h.stucco });
+      add('', { cls: 'slab', w: 300, h: 620, x: (i % 2 ? 640 : -640) * XS, y: -300, z: Z0 - i * S - 220, ry: i % 2 ? -8 : 8, ax: '-50%', ay: '0', bg: h.stucco });
       paintFigure($('canvas', d), M.figures[h.figures[0]], h, { w: 300, h: 220 });
     });
     add(`<div class="endwall"><span class="mono" style="color:var(--ink-3)">走廊尽头</span><div class="big">从第一厅开始</div><a href="#hall-1" data-cur="进入">进入第 I 厅 · 相遇与心动 →</a></div>`,
@@ -189,11 +187,14 @@
       if (!alive) return;
       const top = corr.offsetTop, H = corr.offsetHeight - innerHeight;
       const p = clamp((scrollY - top) / H);
-      const key = p.toFixed(4) + mouse.moved;
+      const key = p.toFixed(4) + mouse.moved + innerWidth;
       if (key !== last) {
         last = key;
         const cam = p * (-ZEND - 300);
-        world.style.transform = `translateZ(${cam}px)`;
+        const sc = Math.min(1, Math.max(.5, innerWidth / 1100));
+        stage.style.perspective = 760 * sc + 'px';
+        world.style.transform = `scale3d(${sc},${sc},${sc}) translateZ(${cam}px)`;
+        document.body.classList.toggle('small3d', sc < .8);
         const op = clamp(p / 0.05);
         half.l.style.transform = `translateX(${-op * 760}px)`;
         half.r.style.transform = `translateX(${op * 760}px)`;
@@ -223,7 +224,7 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-    return () => { alive = false; };
+    return () => { alive = false; document.body.classList.remove('small3d'); };
   }
 
   /* ---------- 视图：标准展厅 ---------- */
@@ -241,7 +242,7 @@
     return `<section class="hall-head" style="--hall-stucco:${h.stucco}"><div class="roman">${h.roman}</div><div class="inner">
       <div><span class="mono">SALA ${h.roman} · <span class="en">${h.en}</span></span><h1>${esc(h.name)}</h1>
         <p class="intro">${esc(h.intro)}</p>
-        <div class="count mono"><span>${h.figures.length} 幅画像</span><span>N° ${h.figures.map(i => pad(M.figures[i].no)).join(' ')}</span></div>
+        <div class="count mono"><span>${h.figures.length} 幅画像</span></div>
         ${unfinished ? '<div class="banner mono">本厅画像布展中 · 墙上暂挂释义</div>' : ''}
       </div>${refArt(h.art, h.figures[0], h)}</div></section>`;
   }
@@ -255,12 +256,31 @@
       ${h.figures.map(id => { const f = M.figures[id]; return `<li><span class="mono">${pad(f.no)}</span><a href="#fig-${id}">${esc(f.zh)} <span class="fr">${esc(f.fr)}</span></a></li>`; }).join('')}
       </ul></div></div></section>`;
   }
+  function viewHallList(h) {
+    setMini(h.id);
+    document.documentElement.style.setProperty('--stucco', h.stucco);
+    const n = h.figures.length;
+    app.innerHTML = hallHead(h) + `<section class="vlist">${h.figures.map((id, i) => { const f = M.figures[id]; return `
+      <a class="vcard" href="#fig-${id}" data-id="${id}"><span class="vnum mono">${pad(i + 1)} / ${pad(n)}</span><canvas></canvas>
+        <div class="sc">${esc(f.scene || f.def)}</div>
+        <div class="lab"><span class="fr">${esc(f.fr)}</span><span>${esc(f.zh)}</span><span class="mono">N° ${pad(f.no)}</span></div></a>`; }).join('')}</section>` + hallExit(h);
+    wireFallbacks(app);
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target); e.target.classList.add('in');
+      const c = $('canvas', e.target);
+      paintFigure(c, M.figures[e.target.dataset.id], h, { w: c.clientWidth, h: c.clientWidth * .75 });
+    }), { rootMargin: '160px' });
+    $$('.vcard', app).forEach(c => io.observe(c));
+    return () => { io.disconnect(); document.documentElement.style.removeProperty('--stucco'); };
+  }
   function viewHall(h) {
+    if (innerWidth < 760) return viewHallList(h);
     setMini(h.id);
     document.documentElement.style.setProperty('--stucco', h.stucco);
     const n = h.figures.length;
     app.innerHTML = hallHead(h) + `
-      <section class="track-sec" id="tsec" style="height:${n * 70 + 100}vh"><div class="track-stage" style="--hall-stucco:${h.stucco}">
+      <section class="track-sec" id="tsec" style="height:${n * 58 + 90}vh"><div class="track-stage" style="--hall-stucco:${h.stucco}">
         <div class="ghost" id="ghost">${h.figures.map(i => esc(M.figures[i].fr)).join(' · ')}</div>
         <div class="slit" style="left:12%"></div><div class="slit" style="left:58%"></div><div class="slit" style="left:104%"></div>
         <div class="slabs" id="slabs">${'<i></i>'.repeat(n + 2)}</div>
@@ -289,7 +309,8 @@
           const c = e.offsetLeft + e.offsetWidth / 2 + tx;
           const d = (c - innerWidth / 2) / innerWidth;
           const panel = e.firstElementChild;
-          panel.style.transform = `rotateY(${clamp(-d * 60, -48, 48)}deg) translateZ(${-Math.abs(d) * 180}px)`;
+          panel.style.transform = `rotateY(${clamp(-d * 26, -18, 18)}deg) translateZ(${-Math.abs(d) * 90}px)`;
+          panel.style.opacity = (1 - Math.min(Math.abs(d), 1) * .42).toFixed(3);
           e.classList.toggle('active', Math.abs(d) < .16);
           if (Math.abs(d) < bd) { bd = Math.abs(d); best = i; }
           if (Math.abs(d) < 1.6 && !painted.has(i)) {
@@ -321,7 +342,7 @@
         <p class="intro">${esc(h.intro)}</p>
         <div class="meter mono"><span>已显影 <b id="devn">0</b> / ${h.figures.length}</span><span>${fine ? '把光标移到相纸上，停一会儿' : '把相纸滑到屏幕中间，停一会儿'}</span></div>
       </div>${refArt(h.art, h.figures[0], h, true)}</div></section>
-      <section class="lines">${rows.map(r => `<div class="wire-row"><svg class="wire" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 4 Q 50 22 100 4" fill="none" stroke="#5a2a22" stroke-width=".25"/></svg>
+      <section class="lines" id="lines"><div class="flash" id="flash"></div>${rows.map(r => `<div class="wire-row"><svg class="wire" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 4 Q 50 22 100 4" fill="none" stroke="#5a2a22" stroke-width=".25"/></svg>
         ${r.map(id => { const f = M.figures[id]; return `<a class="print" href="#fig-${id}" data-id="${id}" data-cur="开灯近看"><div class="peg"></div><div class="paper">
           <canvas></canvas><div class="sc">${esc(f.scene || f.def)}</div>
           <div class="lab"><span class="fr">${esc(f.fr)}</span><span>${esc(f.zh)}</span><span class="mono">N° ${pad(f.no)}</span></div>
@@ -330,7 +351,7 @@
         <div><span class="mono" style="color:#9c5a4d">暗房规矩</span><p>显影，停显，定影。一张相纸在显影液里待够了时间，影像才会浮上来；看过的画像会盖上“已定影”的章。巴特另有一本写照片的书叫《明室》，这一间是它的反面。</p>
         <a class="next" href="#hall-3" data-cur="推门">离开暗房 · 第 III 厅 身体与接触 →</a></div></div></section>
       ${hallExit(h).replace('hall-exit', 'hall-exit" style="background:#1a0a08;color:#f1c9bd')}
-      <div class="flash" id="flash"></div></div>`;
+      </div>`;
     wireFallbacks(app);
     const prints = $$('.print', app).map(el => ({ el, paper: $('.paper', el), dev: 0, th: 0, v: 0, ph: Math.random() * 6 }));
     let painted = false;
@@ -338,13 +359,15 @@
       prints.forEach(p => { const c = $('canvas', p.el); paintFigure(c, M.figures[p.el.dataset.id], h, { w: c.clientWidth, h: c.clientWidth * .75, dark: true }); });
       painted = true;
     });
-    const flash = $('#flash');
+    const flash = $('#flash'), linesEl = $('#lines');
+    if (!fine) flash.hidden = true;
     let alive = true, t0 = performance.now(), count = 0;
     function frame(t) {
       if (!alive) return;
       const dt = Math.min(.05, (t - t0) / 1000); t0 = t;
       const fx = fine ? mouse.x : innerWidth / 2, fy = fine ? mouse.y : innerHeight * .45;
-      flash.style.setProperty('--mx', fx + 'px'); flash.style.setProperty('--my', fy + 'px');
+      const lr = linesEl.getBoundingClientRect();
+      flash.style.setProperty('--mx', (fx - lr.left) + 'px'); flash.style.setProperty('--my', (fy - lr.top) + 'px');
       const pvx = mouse.vx; mouse.vx *= .85;
       prints.forEach(p => {
         const r = p.el.getBoundingClientRect();
@@ -374,7 +397,7 @@
     setMini(h.id);
     document.body.classList.add('scrib');
     const words = ['我爱你', 'je t’aime', '我……', '算了', 'again', '说不出', '删掉', '你在吗', 'JE-T-AIME', '没什么', '其实', '我爱你', '对不起', '真的', 'encore'];
-    const bg = Array.from({ length: 34 }, (_, i) => {
+    const bg = Array.from({ length: 18 }, (_, i) => {
       const w = words[i % words.length];
       const x = (i * 37 + 11) % 96, y = (i * 53 + 7) % 100, r = ((i * 29) % 30) - 15, s = 16 + (i * 13) % 52;
       return `<span class="bgw ${i % 3 === 0 ? 'x' : ''}" style="left:${x}%;top:${y}%;transform:rotate(${r}deg);font-size:${s}px">${esc(w)}</span>`;
@@ -484,7 +507,7 @@
     let ruler = '';
     for (let m = 0; m <= MAXD + 20; m += 5) ruler += `<div class="tick ${m % 10 ? '' : 'big'}" style="top:${m * 12}px">${m % 10 ? '' : m}</div>`;
     app.innerHTML = hallHead(h).replace('class="hall-head"', 'class="hall-head abyss-head"') + `
-      <section class="shaft" id="shaft" style="height:${n * 85 + 160}vh"><div class="shaft-stage" id="sst">
+      <section class="shaft" id="shaft" style="height:${n * 72 + 140}vh"><div class="shaft-stage" id="sst">
         <canvas id="bub" class="bub" aria-hidden="true"></canvas>
         <svg class="surface" id="surf" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path id="wave"></path></svg>
         <div class="surf-hint mono" id="shint">水面 · 往下滚，沉下去</div>
@@ -511,7 +534,7 @@
     let BW = 0, BH = 0;
     function sizeB() { const dpr = Math.min(2, devicePixelRatio || 1); BW = sst.clientWidth; BH = sst.clientHeight; bub.width = BW * dpr; bub.height = BH * dpr; bc.setTransform(dpr, 0, 0, dpr, 0, 0); }
     sizeB(); addEventListener('resize', sizeB);
-    const parts = Array.from({ length: 90 }, (_, i) => ({ x: Math.random(), y: Math.random(), r: i < 40 ? 1 + Math.random() * 4 : .6 + Math.random() * 1.2, up: i < 40, s: .2 + Math.random() * .8, ph: Math.random() * 6 }));
+    const parts = Array.from({ length: fine ? 80 : 40 }, (_, i) => ({ x: Math.random(), y: Math.random(), r: i < 40 ? 1 + Math.random() * 4 : .6 + Math.random() * 1.2, up: i < 40, s: .2 + Math.random() * .8, ph: Math.random() * 6 }));
     let alive = true, lastY = scrollY, vel = 0;
     function frame(t) {
       if (!alive) return;
@@ -541,7 +564,7 @@
         const sway = reduced ? 0 : Math.sin(t / 1800 + i * 1.7) * 14;
         const rot = reduced ? 0 : Math.sin(t / 2600 + i) * 2.2;
         c.style.transform = `translate(${sway}px, ${y}px) translateY(-50%) rotate(${rot}deg) scale(${1 - Math.min(dist, 1) * .22})`;
-        c.style.filter = `blur(${Math.min(6, dist * 7).toFixed(2)}px)`;
+        if (fine) c.style.filter = `blur(${Math.min(5, dist * 6).toFixed(2)}px)`;
         c.style.opacity = clamp(1.35 - dist * 1.5).toFixed(3);
         if (dist < bd) { bd = dist; best = c; }
         if (dist < 1.2 && !painted.has(i)) { painted.add(i); const cv = $('canvas', c); paintFigure(cv, M.figures[c.dataset.id], h, { w: cv.clientWidth, h: cv.clientWidth * .75 }); }
@@ -577,7 +600,7 @@
     document.body.classList.add('bright');
     const n = h.figures.length, D = 1100, END = (n + 1) * D;
     app.innerHTML = hallHead(h).replace('class="hall-head"', 'class="hall-head exit-head"') + `
-      <section class="exit-corr" id="xc" style="height:${n * 95 + 180}vh"><div class="xstage" id="xst"><div class="xworld" id="xw"></div><div class="xlight" id="xl"></div>
+      <section class="exit-corr" id="xc" style="height:${n * 80 + 160}vh"><div class="xstage" id="xst"><div class="xworld" id="xw"></div><div class="xlight" id="xl"></div>
         <div class="xhud mono"><span id="xn"></span><span>每穿过一扇门，光就多一点</span></div>
         <div class="outro" id="outro"><span class="mono">展馆出口 · SORTIE</span><h2>外面是光</h2>
           <p>八十种絮语到这里看完了。巴特没有替恋人找到出口，他只是把门一扇扇打开。</p>
@@ -600,18 +623,21 @@
       const f = M.figures[id], z = -(i + 1) * D, side = i % 2 ? 1 : -1;
       add(`<div class="xdoor"><div class="lintel fr">${esc(f.fr)}</div><div class="opening"></div></div>`, { x: 0, y: 380, z, ax: '-50%', ay: '-100%', door: 1 });
       const card = add(`<a class="xcard" href="#fig-${id}" data-id="${id}" data-cur="近看"><canvas></canvas><div class="sc">${esc(f.scene || f.def)}</div><div class="lab"><span class="fr">${esc(f.fr)}</span><span>${esc(f.zh)}</span><span class="mono">N° ${pad(f.no)}</span></div></a>`,
-        { x: side * (innerWidth < 700 ? 250 : 520), y: 120, z: z + 420, ry: -side * (innerWidth < 700 ? 40 : 32), ax: '-50%', ay: '-50%', card: 1, idx: i });
+        { x: side * 520 * (innerWidth < 760 ? .62 : 1), y: 120, z: z + 420, ry: -side * (innerWidth < 700 ? 40 : 32), ax: '-50%', ay: '-50%', card: 1, idx: i });
       paintFigure($('canvas', card), f, h, { w: 300, h: 225 });
     });
     let alive = true, last = '';
     function frame() {
       if (!alive) return;
       const H = xc.offsetHeight - innerHeight, p = clamp((scrollY - xc.offsetTop) / H);
-      const key = p.toFixed(4) + mouse.moved;
+      const key = p.toFixed(4) + mouse.moved + innerWidth;
       if (key !== last) {
         last = key;
         const cam = p * (END + 200);
-        xw.style.transform = `translateZ(${cam}px)`;
+        const sc = Math.min(1, Math.max(.5, innerWidth / 1100));
+        xst.style.perspective = 760 * sc + 'px';
+        xw.style.transform = `scale3d(${sc},${sc},${sc}) translateZ(${cam}px)`;
+        document.body.classList.toggle('small3d', sc < .8);
         let cur = -1;
         items.forEach(it => {
           const zv = it.z + cam;
@@ -632,7 +658,7 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-    return () => { alive = false; document.body.classList.remove('bright'); };
+    return () => { alive = false; document.body.classList.remove('bright', 'small3d'); };
   }
 
   /* ---------- 视图：藏品总目 ---------- */
@@ -644,7 +670,7 @@
       <p class="lead">按原书的法文字母顺序排列。翻过卡片看释义，点开进入所在展厅近看。色点表示它挂在哪个厅。</p>
       <div class="chips" id="chips"><button class="on" data-h="0">全部 80</button>${M.halls.map(h => `<button data-h="${h.id}">${h.roman} ${h.name}</button>`).join('')}</div>
       <div class="cards" id="cards">${all.map(([id, f]) => { const h = hallOf[id]; return `<a class="card" href="#fig-${id}" data-h="${h.id}" data-id="${id}" data-cur="近看"><div class="in">
-        <div class="f"><canvas></canvas><div class="no"><span>N° ${pad(f.no)}</span><span><i class="hall-dot" style="background:${h.stucco}"></i>${h.roman}</span></div><div class="fr">${esc(f.fr)}</div><div class="zh">${esc(f.zh)}</div></div>
+        <div class="f"><canvas></canvas><div class="no"><span>N° ${pad(f.no)}</span><span><i class="hall-dot" style="background:${h.stucco}"></i>${h.roman}</span></div><div class="fr">${esc(f.fr)}</div><div class="zh">${esc(f.zh)}</div><p class="fdef">${esc(f.def)}</p></div>
         <div class="b"><span class="mono">第 ${h.roman} 厅 · ${esc(h.name)}</span><p>${esc(f.def)}</p><span class="mono">${f.scene ? '近看 →' : '布展中 · 释义可读'}</span></div>
       </div></a>`; }).join('')}</div></div></section>`;
     const io = new IntersectionObserver(es => es.forEach(e => {
@@ -679,7 +705,7 @@
     cu.classList.toggle('deep', h.kind === 'abyss');
     cu.classList.toggle('paper', h.kind === 'scribble');
     cu.classList.toggle('bright', h.kind === 'exit');
-    cu.innerHTML = `<button class="close" data-cur="回到展厅" aria-label="关闭近看">ESC · 关闭</button>
+    cu.innerHTML = `<button class="close" data-cur="回到展厅" aria-label="关闭近看"><span class="k">ESC · </span>关闭</button>
       <div class="left"><div class="bgfr">${esc(f.fr)}</div><div class="art"><canvas></canvas></div><div class="scene" aria-label="${esc(text)}">${scene}</div></div>
       <div class="right"><span class="mono" style="opacity:.7">N° ${pad(f.no)} · 第 ${h.roman} 厅 ${esc(h.name)}</span>
         <div class="frbig fr">${esc(f.fr)}</div><h2>${esc(f.zh)}</h2>
@@ -698,7 +724,7 @@
       const c = $('.art canvas', cu);
       paintFigure(c, f, h, { w: c.clientWidth, h: c.clientWidth * .75, dark });
     });
-    $('.close', cu).focus({ preventScroll: true });
+    cu.setAttribute('tabindex', '-1'); cu.focus({ preventScroll: true });
   }
   function closeFig() {
     cu.classList.remove('open'); cu.setAttribute('aria-hidden', 'true'); cuId = null;
@@ -730,6 +756,7 @@
   async function route(first) {
     const r = parse();
     $$('#top nav a[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === r.key.split('-')[0]));
+    $$('#menu .mi').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + r.key));
     if (r.key === current.key) { r.fig ? openFig(r.fig) : closeFig(); return; }
     closeFig();
     if (!first) {
@@ -745,26 +772,51 @@
     if (!first) open();
     if (r.fig) setTimeout(() => openFig(r.fig), first ? 50 : 500);
   }
+  /* ---------- 手机目录 ---------- */
+  (function menu() {
+    const btn = $('#menuBtn'), menu = $('#menu');
+    if (!btn || !menu) return;
+    menu.innerHTML = `<div class="menu-in"><a class="mi" href="#lobby"><span class="mono">ENTRÉE</span>门厅<small>前言 · 平面图</small></a>
+      ${M.halls.map(h => `<a class="mi" href="#hall-${h.id}"><span class="mono">${h.roman}</span>${esc(h.name)}<small>${h.figures.length} 幅${h.kind !== 'standard' ? ' · 特展' : ''}</small></a>`).join('')}
+      <a class="mi" href="#index"><span class="mono">INDEX</span>藏品总目<small>80 件</small></a>
+      <a class="mi out" href="${esc(M.blog)}">回到博客 ↗</a>
+      <button type="button" class="mi out" id="menuInstall" hidden>安装 App</button></div>`;
+    const set = o => { menu.hidden = !o; btn.setAttribute('aria-expanded', String(o)); btn.textContent = o ? '关闭' : '目录'; document.body.classList.toggle('menu-open', o); };
+    btn.addEventListener('click', () => set(menu.hidden));
+    menu.addEventListener('click', e => { if (e.target.closest('a, #menuInstall')) set(false); });
+    addEventListener('hashchange', () => set(false));
+    addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) set(false); });
+  })();
+
   /* ---------- 安装成 App（PWA） ---------- */
   (function pwa() {
     const btn = $('#installBtn'), tip = $('#installTip');
     if (!btn) return;
+    if (tip) tip.hidden = true;
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     const framed = (() => { try { return window.top !== window; } catch (e) { return true; } })();
     if ('serviceWorker' in navigator && !framed && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
     }
     if (standalone || framed) return;
     let deferred = null;
-    addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; btn.hidden = false; });
-    addEventListener('appinstalled', () => { btn.hidden = true; deferred = null; });
+    const menuBtn = $('#menuInstall');
+    const show = v => { btn.hidden = !v; if (menuBtn) menuBtn.hidden = !v; };
+    if (menuBtn) menuBtn.addEventListener('click', () => btn.click());
+    addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; show(true); });
+    addEventListener('appinstalled', () => { show(false); deferred = null; });
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (ios) btn.hidden = false;
+    if (ios) show(true);
     btn.addEventListener('click', async () => {
-      if (deferred) { deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; btn.hidden = true; }
+      if (deferred) { deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; show(false); }
       else if (ios) tip.hidden = false;
     });
-    $('#installTipClose').addEventListener('click', () => (tip.hidden = true));
+    let tipTimer;
+    const hideTip = () => { tip.hidden = true; clearTimeout(tipTimer); };
+    tip.addEventListener('click', hideTip);
+    $('#installTipClose').addEventListener('click', e => { e.stopPropagation(); hideTip(); });
+    addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
+    btn.addEventListener('click', () => { if (!tip.hidden) { clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 12000); } });
   })();
   addEventListener('hashchange', () => route(false));
   route(true);
